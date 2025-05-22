@@ -175,13 +175,6 @@ pub fn main_2_4_3() {
     // Wireframe mode - optional
     // unsafe { gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE); }
 
-    // Set texture unit uniform in shader
-    unsafe { 
-        default_shader.use_program();
-        default_shader.set_int(c_str!("tex0"), 0); 
-        default_shader.set_int(c_str!("tex1"), 1); 
-    }
-
     // Enable depth testing to put display top most primitives
     unsafe {
         gl::Enable(gl::DEPTH_TEST);
