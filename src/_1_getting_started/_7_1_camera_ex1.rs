@@ -12,7 +12,8 @@ use image;
 use nalgebra_glm as glm;
 
 use crate::shader::Shader;
-use crate::camera::{FPSCamera, Camera};
+use crate::camera::Camera;
+use crate::_1_getting_started::_7_1_camera_class::FPSCamera;
 
 const MESSAGE : &str = "Chapter 1 : Part 7 : Ex1 : FPS style camera, WASD - move, mouse(hold right click) - view , scroll - zoom";
 const WINDOW_WIDTH: u32 = 800;

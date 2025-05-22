@@ -11,7 +11,8 @@ use glfw::{self, Context};
 use image;
 use nalgebra_glm as glm;
 
-use crate::camera::{Camera, FreeCameraEx3};
+use crate::camera::Camera;
+use crate::_1_getting_started::_7_2_camera_class::FreeCameraEx3;
 use crate::shader::Shader;
 
 const MESSAGE : &str = "Chapter 1 : Part 7 : Camera without using look_at (using matrices)";

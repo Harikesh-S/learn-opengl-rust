@@ -43,6 +43,8 @@ pub use _6_3_coordinate_systems_ex3::*;
 mod _7_0_camera;
 pub use _7_0_camera::*;
 mod _7_1_camera_ex1;
+mod _7_1_camera_class;
 pub use _7_1_camera_ex1::*;
 mod _7_2_camera_ex2;
+mod _7_2_camera_class;
 pub use _7_2_camera_ex2::*;

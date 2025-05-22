@@ -1,38 +1,12 @@
-/// Camera class that implements a Free cam
-
-// Notes: 
-// camera's matrices are only calculated if necessary, and the shader is updated only if the matrices are
-// Not sure if this makes any impact to performance, but technically it should result in less updates to the gpu
-
-// update_cam_matrix does calculcate the projection matrix every frame, but this can be changed by screen or user
-// input. Not sure if its worth it to spearate it and only update if necessary (aspect, fov change)
+// Implementing FreeCamera again but without using look_at for 1_7_3
 
 use glfw;
 use nalgebra_glm as glm;
 use std::ffi::CStr;
 use crate::shader::Shader;
+use crate::camera::Camera;
 
-pub trait Camera {
-    // Create and init a new camera
-    fn new(position : glm::Vec3, roll : f32, pitch : f32, yaw : f32,  width: u32, height : u32) -> Self;
-    // Handle window events
-    fn handle_window_event(&mut self, event : &glfw::WindowEvent, time_delta : &f64);
-    // Used to update the shader's camMatrix
-    fn set_cam_matrix(&mut self, shader : &Shader);
-    // Main update function
-    fn update(&mut self, window : &mut glfw::PWindow, time_delta : f64);
-    // Update camera's cam_matrix
-    fn update_cam_matrix(&mut self, calc_dir : bool);
-    // Update camera's direction
-    fn update_cam_direction(&mut self);
-}
-
-/// Free Camera
-/// updates are handled internally using camera.update
-/// WASD to move, QE to rotate, Mouse to pitch/yaw while holding right click
-/// Shift to speed up, scroll to zoom in/out
-/// Limitation: Cannot pitch/yaw when roll != 0. since the mouse input is added to pitch/yaw and does not account for the current roll
-pub struct FreeCamera {
+pub struct FreeCameraEx3 {
     // Current Screen Info
     width : u32,
     height : u32,
@@ -66,15 +40,13 @@ pub struct FreeCamera {
     is_matrix_updated : bool        // should matrix be updated in the shader?
     
     // all of these are private since its updated using camera.update()
-    // but these could be made public/getset to update them in the main loop
-    // or with a sepratae event handler
 }
 
-impl Camera for FreeCamera {
+impl Camera for FreeCameraEx3 {
 
     // Returns a fly camera with all fields initialized
-    fn new(position : glm::Vec3, roll : f32, pitch : f32, yaw : f32, width : u32, height : u32) -> FreeCamera {
-        let mut cam = FreeCamera{
+    fn new(position : glm::Vec3, roll : f32, pitch : f32, yaw : f32, width : u32, height : u32) -> FreeCameraEx3 {
+        let mut cam = FreeCameraEx3{
             position : position,
             roll : roll,
             pitch : pitch,
@@ -117,18 +89,19 @@ impl Camera for FreeCamera {
     /// ! This activates the shader
     fn set_cam_matrix(&mut self, shader : &Shader) {
 
-            // Calculate matrices if required
-            if self.calculate_cam_matrix {
-                self.update_cam_matrix(true);
-            }
-
-            // Set shader uniform if required
-            if self.is_matrix_updated {
-                unsafe {
-                    shader.use_program();
-                    shader.set_mat4(c_str!("camMatrix"), self.cam_matrix);
-                }
+        // Calculate matrices if required
+        if self.calculate_cam_matrix {
+            self.update_cam_matrix(true);
         }
+
+        // Set shader uniform if required
+        if self.is_matrix_updated {
+            unsafe {
+                shader.use_program();
+                shader.set_mat4(c_str!("camMatrix"), self.cam_matrix);
+            }
+        self.is_matrix_updated = false;
+    }
     }
     
     /// Function to handle all updates to the camera
@@ -136,9 +109,6 @@ impl Camera for FreeCamera {
         let mut update_speed = self.speed * time_delta as f32;
         let mut update_roll_speed = self.roll_speed * time_delta as f32;
         let update_sensitivty = self.sensitivity * time_delta as f32;
-
-        // Resetting flag here to allow callling set_cam_matrix for multiple shaders
-        self.is_matrix_updated = false;
 
         // Shift - speed multiplier for position/roll
         if window.get_key(glfw::Key::LeftShift) == glfw::Action::Press {
@@ -255,7 +225,27 @@ impl Camera for FreeCamera {
         }
 
         // Calculating view and projection matrices
-        let view = glm::look_at_rh(&self.position, &(self.position + self.direction), &self.up); 
+        // Ex2 - manually calculating lookat
+        // let view = glm::look_at_rh(&self.position, &(self.position + self.direction), &self.up); 
+        
+        let cam_front = -1. * self.direction; // *-1 since dir is actually towards target
+        let cam_right = glm::normalize(&glm::cross(&self.up, &cam_front)); 
+        let cam_up = glm::cross(&cam_front, &cam_right);
+
+        let mat1 = glm::mat4(
+            cam_right.x,        cam_right.y,        cam_right.z,        0.,
+            cam_up.x,           cam_up.y,           cam_up.z,           0.,
+            cam_front.x,        cam_front.y,        cam_front.z,        0.,
+            0.,                 0.,                 0.,                 1.
+            );
+        let mat2 = glm::mat4(
+            1., 0., 0., -self.position.x,
+            0., 1., 0., -self.position.y,
+            0., 0., 1., -self.position.z,
+            0., 0., 0., 1.,
+        );
+        let view = mat1 * mat2;
+
         let projection = glm::perspective(self.width as f32/self.height as f32, f32::to_radians(self.fov), self.near_plane, self.far_plane);
 
         self.cam_matrix = projection * view;
@@ -264,9 +254,9 @@ impl Camera for FreeCamera {
     }
 }
 
-impl Default for FreeCamera {
-    fn default() -> FreeCamera {
-        FreeCamera {
+impl Default for FreeCameraEx3 {
+    fn default() -> FreeCameraEx3 {
+        FreeCameraEx3 {
             position : glm::vec3(0., 0., 0.),
             roll : 0.,
             pitch : 0.,
