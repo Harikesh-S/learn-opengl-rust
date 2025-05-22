@@ -39,7 +39,7 @@ pub struct FreeCamera {
     height : u32,
 
     // Current Position and Orientation
-    pub position : glm::Vec3, 
+    position : glm::Vec3, 
     roll : f32,
     pitch : f32,
     yaw : f32,
@@ -283,7 +283,7 @@ impl Default for FreeCamera {
             height : 100,
             near_plane : 0.1,
             far_plane : 100.,
-            fov : 90.,
+            fov : 45.,
             
             first_click: true,
             calculate_cam_matrix : true,
@@ -538,7 +538,7 @@ impl Default for FPSCamera {
             height : 100,
             near_plane : 0.1,
             far_plane : 100.,
-            fov : 90.,
+            fov : 45.,
             
             first_click: true,
             calculate_cam_matrix : true,
@@ -557,7 +557,7 @@ pub struct FreeCameraEx3 {
     height : u32,
 
     // Current Position and Orientation
-    pub position : glm::Vec3, 
+    position : glm::Vec3, 
     roll : f32,
     pitch : f32,
     yaw : f32,
@@ -817,7 +817,7 @@ impl Default for FreeCameraEx3 {
             height : 100,
             near_plane : 0.1,
             far_plane : 100.,
-            fov : 90.,
+            fov : 45.,
             
             first_click: true,
             calculate_cam_matrix : true,
