@@ -25,6 +25,8 @@ pub trait Camera {
     fn update_cam_matrix(&mut self, calc_dir : bool);
     // Update camera's direction
     fn update_cam_direction(&mut self);
+    // Force update to shader once
+    fn force_set_cam_matrix(&mut self, shader : &Shader);
 }
 
 /// Free Camera
@@ -260,6 +262,12 @@ impl Camera for FreeCamera {
 
         self.cam_matrix = projection * view;
         self.is_matrix_updated = true;
+        self.calculate_cam_matrix = false;
+    }
+
+    fn force_set_cam_matrix(&mut self, shader : &Shader) {
+        self.calculate_cam_matrix = true;
+        self.set_cam_matrix(shader);
         self.calculate_cam_matrix = false;
     }
 }

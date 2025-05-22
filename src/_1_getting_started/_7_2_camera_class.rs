@@ -252,6 +252,12 @@ impl Camera for FreeCameraEx3 {
         self.is_matrix_updated = true;
         self.calculate_cam_matrix = false;
     }
+
+    fn force_set_cam_matrix(&mut self, shader : &Shader) {
+        self.calculate_cam_matrix = true;
+        self.set_cam_matrix(shader);
+        self.calculate_cam_matrix = false;
+    }
 }
 
 impl Default for FreeCameraEx3 {
