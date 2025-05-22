@@ -38,14 +38,14 @@ pub struct FreeCamera {
     height : u32,
 
     // Current Position and Orientation
-    position : glm::Vec3, 
+    pub position : glm::Vec3, 
     roll : f32,
     pitch : f32,
     yaw : f32,
 
     // Matrices used to send data to the shader
-    direction : glm::Vec3,
-    up : glm::Vec3,
+    pub direction : glm::Vec3,
+    pub up : glm::Vec3,
     cam_matrix : glm::Mat4, // projection * view
 
     // Movement speed

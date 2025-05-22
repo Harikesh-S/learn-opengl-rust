@@ -1,2 +1,12 @@
 mod _1_0_colors;
 pub use _1_0_colors::*;
+mod _2_0_basic_lighting;
+pub use _2_0_basic_lighting::*;
+mod _2_1_basic_lighting_ex1;
+pub use _2_1_basic_lighting_ex1::*;
+mod _2_2_basic_lighting_ex2;
+pub use _2_2_basic_lighting_ex2::*;
+mod _2_3_basic_lighting_ex3;
+pub use _2_3_basic_lighting_ex3::*;
+mod _2_4_basic_lighting_ex4;
+pub use _2_4_basic_lighting_ex4::*;
