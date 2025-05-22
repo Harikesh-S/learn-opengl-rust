@@ -86,6 +86,18 @@ impl Shader {
         }
     }
 
+    pub unsafe fn set_vec3(&self, name: &CStr, mat: glm::Vec3) {
+        unsafe {
+            gl::Uniform3fv(gl::GetUniformLocation(self.id, name.as_ptr()), 1, mat.as_ptr() as *const GLfloat);
+        }
+    }
+
+    pub unsafe fn set_vec3_values(&self, name: &CStr, x: GLfloat, y: GLfloat, z: GLfloat) {
+        unsafe {
+            gl::Uniform3f(gl::GetUniformLocation(self.id, name.as_ptr()), x, y, z);
+        }
+    }
+
     pub unsafe fn set_mat4(&self, name: &CStr, mat: glm::Mat4) {
         unsafe {
             gl::UniformMatrix4fv(gl::GetUniformLocation(self.id, name.as_ptr()), 1, gl::FALSE, mat.as_slice().as_ptr() as *const GLfloat);
