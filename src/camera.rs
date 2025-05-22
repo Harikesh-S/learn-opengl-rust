@@ -118,19 +118,18 @@ impl Camera for FreeCamera {
     /// ! This activates the shader
     fn set_cam_matrix(&mut self, shader : &Shader) {
 
-        // Calculate matrices if required
-        if self.calculate_cam_matrix {
-            self.update_cam_matrix(true);
-        }
-
-        // Set shader uniform if required
-        if self.is_matrix_updated {
-            unsafe {
-                shader.use_program();
-                shader.set_mat4(c_str!("camMatrix"), self.cam_matrix);
+            // Calculate matrices if required
+            if self.calculate_cam_matrix {
+                self.update_cam_matrix(true);
             }
-        self.is_matrix_updated = false;
-    }
+
+            // Set shader uniform if required
+            if self.is_matrix_updated {
+                unsafe {
+                    shader.use_program();
+                    shader.set_mat4(c_str!("camMatrix"), self.cam_matrix);
+                }
+        }
     }
     
     /// Function to handle all updates to the camera
@@ -138,6 +137,9 @@ impl Camera for FreeCamera {
         let mut update_speed = self.speed * time_delta as f32;
         let mut update_roll_speed = self.roll_speed * time_delta as f32;
         let update_sensitivty = self.sensitivity * time_delta as f32;
+
+        // Resetting flag here to allow callling set_cam_matrix for multiple shaders
+        self.is_matrix_updated = false;
 
         // Shift - speed multiplier for position/roll
         if window.get_key(glfw::Key::LeftShift) == glfw::Action::Press {
