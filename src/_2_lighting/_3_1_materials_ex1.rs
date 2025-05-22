@@ -15,7 +15,7 @@ use crate::camera::{FreeCamera, Camera};
 const MESSAGE : &str = "Chapter 2 : Part 3 : Ex1 : Changing the light cubes color";
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 800;
-const WINDOW_TITLE: &str = "Basic Lighting";
+const WINDOW_TITLE: &str = "Materials";
 
 // Cube vertices - without TexCoord
 const VERTICES: [GLfloat; 216] = [
