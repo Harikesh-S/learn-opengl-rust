@@ -32,3 +32,7 @@ mod _5_1_light_casters_ex1;
 pub use _5_1_light_casters_ex1::*;
 mod _5_e_light_casters_extra;
 pub use _5_e_light_casters_extra::*;
+mod _6_0_multiple_lights;
+pub use _6_0_multiple_lights::*;
+mod _6_1_multiple_lights_ex1;
+pub use _6_1_multiple_lights_ex1::*;
