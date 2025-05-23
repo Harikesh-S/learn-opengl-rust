@@ -141,6 +141,7 @@ impl Camera for FreeCamera {
 
         // Resetting flag here to allow callling set_cam_matrix for multiple shaders
         self.is_matrix_updated = false;
+        self.calculate_cam_matrix = false;
 
         // Shift - speed multiplier for position/roll
         if window.get_key(glfw::Key::LeftShift) == glfw::Action::Press {
