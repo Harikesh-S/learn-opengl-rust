@@ -17,3 +17,5 @@ Cargo.toml includes all dependencies. Unlike c++ downloading and linking glfw/gl
 ## Notes
 
 - I've used nalgebra-glm instead of cgmath. Most methods from glm have a direct equivalent.
+
+Flashlight texture from [80+ sprites for particles, light cookies and shaders (public domain)](https://www.reddit.com/r/gamedev/comments/8v3x2q/80_sprites_for_particles_light_cookies_and/)

@@ -36,8 +36,8 @@ pub trait Camera {
 /// Limitation: Cannot pitch/yaw when roll != 0. since the mouse input is added to pitch/yaw and does not account for the current roll
 pub struct FreeCamera {
     // Current Screen Info
-    width : u32,
-    height : u32,
+    pub width : u32,
+    pub height : u32,
 
     // Current Position and Orientation
     pub position : glm::Vec3, 

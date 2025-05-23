@@ -86,6 +86,7 @@ impl Shader {
         }
     }
 
+    
     pub unsafe fn set_vec3(&self, name: &CStr, mat: glm::Vec3) {
         unsafe {
             gl::Uniform3fv(gl::GetUniformLocation(self.id, name.as_ptr()), 1, mat.as_ptr() as *const GLfloat);
