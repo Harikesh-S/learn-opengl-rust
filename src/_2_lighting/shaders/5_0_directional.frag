@@ -45,7 +45,6 @@ vec3 calculateDirectionalLight(Light light, Material material, vec3 viewPos, vec
     vec3 lightDir = normalize(-light.direction);  // direction is expected to point towards the light
     float diff = max(dot(norm, lightDir), 0.0);   // get angle between light and normal, we don't want values < 0
     // Specular highlights
-    float specularStrength = 0.5;                 // Strength of specular component 
     vec3 viewDir = normalize(viewPos - FragPos);  // calculate normal against view direction
     vec3 reflectDir = reflect(-lightDir, norm);   // reflect light direction along normal, -1 * since reflect expects vector to point from the source
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
