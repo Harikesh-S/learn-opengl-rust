@@ -66,9 +66,6 @@ const VERTICES: [GLfloat; 288] = [
     -0.5,  0.5, -0.5,  0.0,  1.0,  0.0,  0.0, 1.0
 ];
 
-const LIGHT_LOCATION : glm::Vec3 = glm::Vec3::new(0.0, 0.0, -4.0);
-const LIGHT_SCALE : glm::Vec3 = glm::Vec3::new(0.2, 0.2, 0.2);
-
 const CUBE_POSITIONS: [glm::Vec3; 10] = [
     glm::Vec3::new(0.0, 0.0, 0.0),
     glm::Vec3::new(2.0, 5.0, -15.0),
@@ -115,7 +112,7 @@ pub fn main_2_5_e() {
 
     // Shader Program
     let object_shaders = [
-        Shader::new("./src/_2_lighting/shaders/5_e_default.vert","./src/_2_lighting/shaders/5_e_spot.frag"),
+        Shader::new("./src/_2_lighting/shaders/5_e_default.vert","./src/_2_lighting/shaders/5_e_spot_soft.frag"),
         Shader::new("./src/_2_lighting/shaders/4_0_default.vert","./src/_2_lighting/shaders/5_0_spot_soft.frag"),
         ];
     let object_shader_names = [
@@ -179,7 +176,6 @@ pub fn main_2_5_e() {
     )};
     // flashlight texture
     let flashlight_cookie = unsafe {load_texture("./resources/textures/light_03.png")};
-    //let flashlight_cookie = unsafe {load_texture("./resources/textures/ferris.png")};
     // --Initial Config - Viewport------------------------------------------------------------------------------------------------- //
 
     // Camera
@@ -276,7 +272,9 @@ pub fn main_2_5_e() {
                     object_shaders[curr_light].set_vec3(c_str!("light.position"), camera.position);
                     object_shaders[curr_light].set_vec3(c_str!("light.direction"), camera.direction);
                     object_shaders[curr_light].set_float(c_str!("light.cutOff"), f32::cos(f32::to_radians(12.5)));
+                    object_shaders[curr_light].set_float(c_str!("light.outerCutOff"), f32::cos(f32::to_radians(17.5)));
                     object_shaders[curr_light].set_int(c_str!("light.flashlight"), 2); // using texture unit 2 for flashlight
+                    object_shaders[curr_light].set_vec2(c_str!("viewPort"), glm::vec2(camera.width as f32, camera.height as f32));
                 },
                 1 => {  // Used by spot light soft (flash light)
                     object_shaders[curr_light].set_vec3(c_str!("light.position"), camera.position);
@@ -305,23 +303,6 @@ pub fn main_2_5_e() {
                 // Draw
                 gl::DrawArrays(gl::TRIANGLES,0, 36);
                 i+=1;
-            }
-
-            if curr_light == 1 {
-                // Drawing the light source only for point source
-                light_shader.use_program();
-                gl::BindVertexArray(light_vao);
-                
-                let mut light_model = glm::Mat4::identity();
-                light_model = glm::translate(&light_model, &LIGHT_LOCATION);
-                light_model = glm::scale(&light_model, &LIGHT_SCALE);
-
-                camera.set_cam_matrix(&light_shader);
-                light_shader.set_mat4(c_str!("model"),  light_model); 
-
-                light_shader.set_vec3_values(c_str!("lightColor"), 1.0, 1.0, 1.0);     // Materials Ex1
-
-                gl::DrawArrays(gl::TRIANGLES,0, 36);
             }
         }
 
