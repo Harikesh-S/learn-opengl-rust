@@ -82,6 +82,7 @@ pub fn main_3_1() {
 
     // Time
     let mut prev_time = glfw.get_time();
+    let mut emissive: f32 = 1.;
 
     // --Render loop--------------------------------------------------------------------------------------------------------------- //
 
@@ -109,6 +110,13 @@ pub fn main_3_1() {
                 glfw::WindowEvent::Key(glfw::Key::Escape, _, glfw::Action::Press, _) => {
                     window.set_should_close(true)
                 }
+                glfw::WindowEvent::Key(glfw::Key::Space, _, glfw::Action::Press, _) => {
+                    emissive = (emissive + 0.25) as f32;
+                    if emissive > 1.0 {
+                        emissive = 0.0;
+                    }
+                    println!("Updating emissive {}", emissive);
+                }
                 glfw::WindowEvent::FramebufferSize(w, h) => unsafe {
                     gl::Viewport(0, 0, w, h);
                 }
@@ -129,8 +137,17 @@ pub fn main_3_1() {
             // Set transformation matrices
             camera.set_cam_matrix(&default_shader);
 
-             default_shader.set_mat4(c_str!("model"), glm::Mat4::identity());
+            let model = glm::Mat4::identity();
+            let model = glm::scale(&model, &glm::vec3(0.25,0.25,0.25));
+            let model = glm::rotate(&model, f32::to_radians(90.), &glm::Vec3::x_axis());
+             default_shader.set_mat4(c_str!("model"), model);
             
+            // updating emission
+            //default_shader.set_float(c_str!("material.emissive_strength"),  f32::sin(glfw.get_time() as f32)); 
+            default_shader.set_float(c_str!("material.emissive_strength"),  emissive); 
+
+
+
             // Set material
             // default_shader.set_int(c_str!("material.diffuse"), 0);  // Using texture unit 0 for diffuse map
             // default_shader.set_int(c_str!("material.specular"), 1);  // Using texture unit 1 for specular map
@@ -139,10 +156,10 @@ pub fn main_3_1() {
             default_shader.set_vec3(c_str!("viewPos"), camera.position);    // View position for specular highlights
             
             // Used by directional light
-            default_shader.set_vec3_values(c_str!("dirLight.ambient"),  0.2, 0.2, 0.2);      // low because we dont want amient color to be too dominant
+            default_shader.set_vec3_values(c_str!("dirLight.ambient"),  0.1, 0.1, 0.1);      // low because we dont want amient color to be too dominant
             default_shader.set_vec3_values(c_str!("dirLight.diffuse"),  0.5, 0.5, 0.5);      // exact color that we want
-            default_shader.set_vec3_values(c_str!("dirLight.specular"),  0.5,0.5,0.5);         // high because we want the light's color in the highlight
-            default_shader.set_vec3_values(c_str!("dirLight.direction"), -0.2, -1.0, -0.3); // direction that the light is pointing to
+            default_shader.set_vec3_values(c_str!("dirLight.specular"),  1.0,1.0,1.0);         // high because we want the light's color in the highlight
+            default_shader.set_vec3_values(c_str!("dirLight.direction"), 0., 0., 1.); // direction that the light is pointing to
 
             object.draw(&default_shader);
 

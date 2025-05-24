@@ -6,6 +6,7 @@ struct Material {
     sampler2D texture_specular0;
     sampler2D texture_emissive0;
     float shininess;
+    float emissive_strength;
 };
 
 // Struct to hold light data
@@ -55,7 +56,7 @@ vec3 calculateDirectionalLight(Light light, Material material, vec3 viewPos, vec
     vec3 ambient = light.ambient * vec3(texture(material.texture_diffuse0, TexCoord));
     vec3 diffuse = light.diffuse * (diff * vec3(texture(material.texture_diffuse0, TexCoord)));
     vec3 specular = light.specular * (spec * vec3(texture(material.texture_specular0, TexCoord)));
-    vec3 emissive = vec3(texture(material.texture_emissive0, TexCoord)) * 0.5;
+    vec3 emissive = vec3(texture(material.texture_emissive0, TexCoord)) * material.emissive_strength;
     vec3 result = ambient + diffuse + specular + emissive;   // Removing objectColor since color is a part of the material
     
     return result;
