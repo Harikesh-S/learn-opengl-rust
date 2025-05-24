@@ -7,7 +7,8 @@
 mod shader;
 mod macros;
 mod camera;
-// mod mesh;
+mod model;
+mod mesh;
 // mod model;
 // mod utils;
 
@@ -97,13 +98,11 @@ fn main() {
         #[cfg(feature = "chapter-2")] "2_5"   => main_2_5(),
         #[cfg(feature = "chapter-2")] "2_5_1" => main_2_5_1(),
         #[cfg(feature = "chapter-2")] "2_5_e" => main_2_5_e(),
-        // #[cfg(feature = "chapter-2")] "2_5_2" => main_2_5_2(),
-        // #[cfg(feature = "chapter-2")] "2_5_3" => main_2_5_3(),
-        // #[cfg(feature = "chapter-2")] "2_5_4" => main_2_5_4(),
         #[cfg(feature = "chapter-2")] "2_6"   => main_2_6(),
         #[cfg(feature = "chapter-2")] "2_6_1"   => main_2_6_1(),
 
         #[cfg(feature = "chapter-3")] "3_1"   => main_3_1(),
+        #[cfg(feature = "chapter-3")] "test"   => test(),
 
         #[cfg(feature = "chapter-4")] "4_1_1" => main_4_1_1(),
         #[cfg(feature = "chapter-4")] "4_1_2" => main_4_1_2(),

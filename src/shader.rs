@@ -144,6 +144,7 @@ impl Shader {
 impl Drop for Shader {
     fn drop(&mut self) {
         unsafe {
+            println!("Deleting shader program {}",self.id);
             self.delete();
         }
     }

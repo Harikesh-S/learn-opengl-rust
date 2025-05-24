@@ -1,3 +1,9 @@
+## Feature
+
+Model loading using tobj. 
+Sword Model from [free3d](https://free3d.com/3d-model/sting-sword-128810.html), mtl generated manually.
+Car model from [kenney.nl](https://kenney.nl/) -  Toy Car Kit -> vehicle-vintage-racer
+
 ## What is this?
 
 Rust port of me following through [learn opengl](https://learnopengl.com/Introduction), including all chapters and exercises. I'm new to OpenGl and rust so this may not be the best way to implement any of this.  
