@@ -2,6 +2,7 @@ use std::ffi::CString;
 use std::ptr;
 use std::mem;
 use std::os::raw::c_void;
+use std::ffi::CStr;
 
 use nalgebra_glm as glm;
 use gl::{self, types::*};
@@ -168,17 +169,24 @@ impl Mesh {
         let mut specular_number = 0;
         let mut emissive_number = 0;
         let mut i = 0;
+
+        // reset uniforms
+        unsafe {
+            shader.set_int(c_str!("material.texture_diffuse0"), 0);
+            shader.set_int(c_str!("material.texture_specular0"), 0);
+            shader.set_int(c_str!("material.texture_emissive0"), 0);
+        }
         while i < self.textures.len() {
             unsafe{
 
                 // activate the i'th texture unit
-                gl::ActiveTexture(gl::TEXTURE0 + i as u32);
+                gl::ActiveTexture(gl::TEXTURE1 + i as u32);
 
                 // Get the texture's number and update the respective count
                 let num = self.textures[i].tex_type.update_count(&mut diffuse_number, &mut specular_number, &mut emissive_number);
                 
                 // Update the texture uniform
-                shader.set_int( &self.textures[i].tex_type.get_shader_name(num), i as i32);
+                shader.set_int( &self.textures[i].tex_type.get_shader_name(num), (i + 1) as i32);
 
                 // Bind the current texture
                 gl::BindTexture(gl::TEXTURE_2D, self.textures[i].id);

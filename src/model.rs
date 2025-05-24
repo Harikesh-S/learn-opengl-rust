@@ -140,12 +140,15 @@ unsafe fn load_texture(path: &str) -> GLuint {
         // Only required for CLAMP_TO_BORDER
         //gl::TexParameterfv(gl::TEXTURE_2D,gl::TEXTURE_BORDER_COLOR,[1.0, 1.0, 1.0, 1.0].as_ptr());
         
+        println!("Loading image from path {}", path);
         // Loading image from file
         let img = image::open(&Path::new(path)).expect("Failed to load texture").flipv().into_rgba8();
 
+        println!("Storing texture data");
         // Store data into texture
         gl::TexImage2D(gl::TEXTURE_2D,0,gl::RGBA as i32,img.width() as i32,img.height() as i32,0,gl::RGBA as u32,gl::UNSIGNED_BYTE,img.as_ptr() as *const u8 as *const c_void);
 
+        println!("Generating mip maps");
         // Generate mip maps for the texture
         gl::GenerateMipmap(gl::TEXTURE_2D);
 

@@ -60,6 +60,8 @@ pub fn main_3_1() {
     let mut object = Model::new();
     // object.load_model("./resources/models/vehicle-vintage-racer.obj");
     object.load_model("./resources/models/Sting-Sword.obj");
+    let mut object_car = Model::new();
+    object_car.load_model("./resources/models/vehicle-vintage-racer.obj");
 
 
     // --Initial Config - Viewport------------------------------------------------------------------------------------------------- //
@@ -139,7 +141,7 @@ pub fn main_3_1() {
 
             let model = glm::Mat4::identity();
             let model = glm::scale(&model, &glm::vec3(0.25,0.25,0.25));
-            let model = glm::rotate(&model, f32::to_radians(90.), &glm::Vec3::x_axis());
+            //let model = glm::rotate(&model, f32::to_radians(90.), &glm::Vec3::x_axis());
              default_shader.set_mat4(c_str!("model"), model);
             
             // updating emission
@@ -159,10 +161,13 @@ pub fn main_3_1() {
             default_shader.set_vec3_values(c_str!("dirLight.ambient"),  0.1, 0.1, 0.1);      // low because we dont want amient color to be too dominant
             default_shader.set_vec3_values(c_str!("dirLight.diffuse"),  0.5, 0.5, 0.5);      // exact color that we want
             default_shader.set_vec3_values(c_str!("dirLight.specular"),  1.0,1.0,1.0);         // high because we want the light's color in the highlight
-            default_shader.set_vec3_values(c_str!("dirLight.direction"), 0., 0., 1.); // direction that the light is pointing to
+            default_shader.set_vec3_values(c_str!("dirLight.direction"), 0., -1., 1.); // direction that the light is pointing to
 
             object.draw(&default_shader);
-
+            let model = glm::Mat4::identity();
+            let model = glm::translate(&model, &glm::vec3(4.,0.,0.));
+            default_shader.set_mat4(c_str!("model"), model);
+            object_car.draw(&default_shader);
             // // Set the maps (textures)
             // gl::ActiveTexture(gl::TEXTURE0);
             // gl::BindTexture(gl::TEXTURE_2D, diffuse_map);
