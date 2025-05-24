@@ -1,3 +1,11 @@
+## Feature
+
+Using crate "assimp" for model loading. Crate seems to be very old (not updated in ~7 years)
+
+- Required a older version of cmake, since with cmake 4.0.2 older versions of cmake <3.5 are not supported. I got around this by installing cmake 3.31 instead, but its probably easier to use tobj instead or use russimp.
+- Model loading, with vertices and faces works. TODO Materials
+- Model from [kenney](https://kenney.nl/)
+
 ## What is this?
 
 Rust port of me following through [learn opengl](https://learnopengl.com/Introduction), including all chapters and exercises. I'm new to OpenGl and rust so this may not be the best way to implement any of this.  
