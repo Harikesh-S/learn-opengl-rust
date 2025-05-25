@@ -22,7 +22,7 @@ impl Shader {
 
         // Opening files using the provided paths
         let mut v_shader_file = File::open(vertex_path).unwrap_or_else(|_| panic!("Failed to open vertex shader {}.", vertex_path));
-        let mut f_shader_file = File::open(fragment_path).unwrap_or_else(|_| panic!("Failed to open fragment shader {}.", vertex_path));
+        let mut f_shader_file = File::open(fragment_path).unwrap_or_else(|_| panic!("Failed to open fragment shader {}.", fragment_path));
 
         // Reading shader data from files
         let mut v_shader_data = String::new();
