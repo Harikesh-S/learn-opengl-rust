@@ -40,4 +40,4 @@ Model loading using tobj.
 
 #### Stencil Buffer
 
-Using the stencil buffer to implement object outlining (incomplete - only works when moving the camera, but this looks cool?)
+- Using the stencil buffer to implement object outlining.
