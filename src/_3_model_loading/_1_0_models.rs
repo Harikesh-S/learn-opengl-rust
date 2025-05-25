@@ -47,7 +47,7 @@ pub fn main_3_1() {
     // --Creating OpenGL Objects--------------------------------------------------------------------------------------------------- //
 
     // Shader Program
-    let default_shader = Shader::new("./src/_3_model_loading/shaders/1_t_default.vert","./src/_3_model_loading/shaders/1_t_default.frag");
+    let default_shader = Shader::new("./src/_3_model_loading/shaders/1_default.vert","./src/_3_model_loading/shaders/1_default.frag");
     
     // Loading models
     let mut model_ferris = Model::new();
