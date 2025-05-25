@@ -127,7 +127,7 @@ pub fn main_4_2_1() {
             // default_shader.use_program(); // done by camera.set_cam_matrix, not sure if this will be repeated by the driver
             
             // Set transformation matrices
-            camera.set_cam_matrix(&default_shader);
+            camera.force_set_cam_matrix(&default_shader); // force set since we are switching programs
             default_shader.set_vec3(c_str!("viewPos"), camera.position);    // View position for specular highlights
             
             // Set light uniforms - directional light
@@ -152,7 +152,7 @@ pub fn main_4_2_1() {
             gl::StencilMask(0x00); // disable writing to buffer
             gl::Disable(gl::DEPTH_TEST); // disable depth buffer since we want to draw the outline regardless of depth
 
-            camera.set_cam_matrix(&outline_shader);
+            camera.force_set_cam_matrix(&outline_shader); // force set since we are switching programs
             outline_shader.set_mat4(c_str!("model"), glm::scale(&model_matrix_f, &glm::vec3(1.1,1.1,1.1)));
             model_ferris.draw(&outline_shader);
 
