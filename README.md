@@ -35,3 +35,9 @@ Lighting using Phong shading
 
 Model loading using tobj.  
 - Ferris model from [RayMarch/ferris3d](https://github.com/RayMarch/ferris3d) - exported using blender
+
+### Chapter 4
+
+#### Stencil Buffer
+
+Using the stencil buffer to implement object outlining (incomplete - only works when moving the camera, but this looks cool?)
