@@ -9,6 +9,7 @@ use gl::{self, types::*};
 
 use crate::shader::Shader;
 
+/// Struct to store vertex data
 #[repr(C)] // align struct like C/C++
 pub struct Vertex {
     pub position : glm::Vec3,
@@ -16,82 +17,49 @@ pub struct Vertex {
     pub tex_coords : glm::Vec2,
 }
 
-#[derive(Copy, Clone)]
-pub enum TextureType {
-    Diffuse,
-    Specular,
-    Emissive
-}
-
-impl TextureType {
-    /// Function to return CString to update shader
-    pub fn get_shader_name(&self, num : GLint) -> CString {
-        CString::new(
-            format!("material.{}{}",
-            match self {
-                Self::Diffuse => { "texture_diffuse"},
-                Self::Specular => { "texture_specular"},
-                Self::Emissive => { "texture_emissive"}
-            },
-            num)).unwrap()
-    }
-    /// Functiont to return number to use with get_shader_name
-    /// Also increments the count
-    pub fn update_count(&self, diffuse_number : &mut i32, specular_number : &mut i32, emissive_number : &mut i32) -> i32 {
-        let num;
-        match self{
-            Self::Diffuse => {
-                num = *diffuse_number;
-                *diffuse_number += 1;
-            },
-            Self::Specular => {
-                num = *specular_number;
-                *specular_number += 1;
-            },
-            Self::Emissive => {
-                num = *emissive_number;
-                *emissive_number += 1;
-            }
-        }
-        num
-    }
-}
-
-// // This can be implemented using enum itself in rust
-// enum Texture {
-//     Diffuse(GLuint)
-// }
-// impl Texture {
-//     fn do_something(&self) {
-//         match self {
-//             Texture::Diffuse(x) => { /*do something with x */}
-//             _ => {}
-//         }
-//     }
-// }
-// But I'm keeping it similar to c++ code 
+/// Enum to store all material data
 #[derive(Clone)]
-pub struct Texture {
-    pub id : GLuint,
-    pub tex_type : TextureType,
-    pub path : String
+pub enum Material {
+    Texture{ id : u32, path : String, type_ : MaterialType},
+    Property{ value : f32, type_ : MaterialType}
+}
+
+// Types for shader textures and properties
+#[derive(Clone)]
+pub enum MaterialType {
+    DiffuseTex,
+    SpecularTex,
+    EmissiveTex,
+    Shininess
+}
+
+impl Material {
+    /// Function to compare the texture's stored path with other
+    /// 
+    /// Returns false if used on anything other than Material::Texture
+    pub fn is_path_eq(&self, other : &str) -> bool {
+        match self {
+            Material::Texture { id: _, path, type_ : _ } => path==other,
+            _ => false,
+        }
+    }
 }
 
 pub struct Mesh {
     pub vertices : Vec<Vertex>,
     pub indices : Vec<GLuint>,
-    pub textures : Vec<Texture>,
+    pub materials : Vec<Material>,
     vao : GLuint,
     vbo : GLuint,
     ebo : GLuint
 }
 
 impl Mesh {
-    pub fn new(v: Vec<Vertex>, i : Vec<GLuint>, t : Vec<Texture>) -> Mesh {
+    pub fn new(v: Vec<Vertex>, i : Vec<GLuint>, t : Vec<Material>) -> Mesh {
         let mut mesh = Mesh {
             vertices : v,
             indices : i,
-            textures : t,
+            materials : t,
             vao : 0,
             vbo : 0,
             ebo : 0
@@ -100,34 +68,7 @@ impl Mesh {
         mesh
     }
 
-    pub fn new_empty () -> Mesh {
-        let v = Vec::from([
-                Vertex{
-                    position : glm::Vec3::new(-0.5,-0.5,0.),
-                    normal : glm::Vec3::new(0.,0.,1.),
-                    tex_coords : glm::Vec2::zeros()},
-                Vertex{
-                    position : glm::Vec3::new(0.5,-0.5,0.),
-                    normal :  glm::Vec3::new(0.,0.,1.),
-                    tex_coords : glm::Vec2::zeros()},
-                Vertex{
-                    position : glm::Vec3::new(0.,0.5,0.),
-                    normal :  glm::Vec3::new(0.,0.,1.),
-                    tex_coords : glm::Vec2::zeros()},
-                ]);
-        let i: Vec<GLuint> = Vec::from([0,1,2]);
-        let mut mesh = Mesh {
-            vertices : v,
-            indices : i,
-            textures : Vec::new(),
-            vao : 0,
-            vbo : 0,
-            ebo : 0
-        };
-        mesh.setup_mesh();
-        mesh
-    }
-
+    /// Function to create vao, vbo and ebo
     fn setup_mesh(&mut self) {
         //println!("Setting up mesh");
         unsafe {
@@ -162,40 +103,72 @@ impl Mesh {
         }
     }
 
+    /// Function to draw the current mesh using the provided shader program
+    /// 
+    /// **Assumes that the shader program is activated**
     pub fn draw(&self,shader : &Shader) {
-
         // Bind textures and set shader uniforms for all textures
-        let mut diffuse_number = 0;
-        let mut specular_number = 0;
-        let mut emissive_number = 0;
-        let mut i = 0;
-
-        // reset uniforms
         unsafe {
+            // Reset uniforms to 0
+            // texture unit 0 is not used
+            // models can have varying textures e.g., no emissive etc
+            // not unsetting this results in other meshes using the textures from a previous call
             shader.set_int(c_str!("material.texture_diffuse0"), 0);
-            shader.set_int(c_str!("material.texture_specular0"), 0);
+            shader.set_int(c_str!("material.texture_specular0"),0);
             shader.set_int(c_str!("material.texture_emissive0"), 0);
-        }
-        while i < self.textures.len() {
-            unsafe{
+            shader.set_float(c_str!("material.shininess"), 32.);
 
-                // activate the i'th texture unit
-                gl::ActiveTexture(gl::TEXTURE1 + i as u32);
+            // Set shader uniforms - textures and other material properties
+            let mut diff_num = 0;
+            let mut spec_num = 0;
+            let mut emis_num = 0;
+            let mut texture_unit = 1;
+            for material in &self.materials {
+                match material {
+                    Material::Texture { id, path: _, type_ } => {
 
-                // Get the texture's number and update the respective count
-                let num = self.textures[i].tex_type.update_count(&mut diffuse_number, &mut specular_number, &mut emissive_number);
-                
-                // Update the texture uniform
-                shader.set_int( &self.textures[i].tex_type.get_shader_name(num), (i + 1) as i32);
+                        // Get the current texture count based on the type, and update the mutable count
+                        let (tex_type , tex_num) = match type_ {
+                            MaterialType::DiffuseTex => { 
+                                let num = diff_num;
+                                diff_num += 1;
+                                ("texture_diffuse",num)
+                            },
+                            MaterialType::SpecularTex => {
+                                let num = spec_num;
+                                spec_num += 1;
+                                ("texture_specular",num)
+                            },
+                            MaterialType::EmissiveTex => {
+                                let num = emis_num;
+                                emis_num += 1;
+                                ("texture_emissive",num)
+                            },
+                            _ => {("",0)} // This should not happen, maybe add panic!
+                        };
 
-                // Bind the current texture
-                gl::BindTexture(gl::TEXTURE_2D, self.textures[i].id);
+                        // Activate the current texture unit
+                        gl::ActiveTexture(gl::TEXTURE0 + texture_unit as u32);
+
+                        // Bind the current texture
+                        gl::BindTexture(gl::TEXTURE_2D, *id);
+                        
+                        // Update the texture uniform
+                        shader.set_int( &CString::new(format!("material.{}{}",tex_type, tex_num)).unwrap(), texture_unit as i32);
+
+                        // Incrementing texture unit count
+                        texture_unit += 1;
+                    },
+                    Material::Property { value, type_ } => {
+                        shader.set_float( &CString::new(format!("material.{}",match type_ {
+                                MaterialType::Shininess => "shininess",
+                                _ => ""
+                            })).unwrap(), *value);
+                    },
+                }
             }
-            i += 1;
-        }
 
-        // Draw the mesh
-        unsafe {
+            // Draw the mesh
             gl::BindVertexArray(self.vao);
             gl::DrawElements(gl::TRIANGLES, self.indices.len() as i32, gl::UNSIGNED_INT, ptr::null());
             gl::BindVertexArray(0);
@@ -203,23 +176,10 @@ impl Mesh {
     }
 }
 
-impl Default for Mesh {
-    fn default() -> Self {
-        Mesh {
-            vertices : Vec::new(),
-            indices : Vec::new(),
-            textures : Vec::new(),
-            vao : 0,
-            vbo : 0,
-            ebo : 0
-        }
-    }
-}
-
 impl Drop for Mesh {
     fn drop(&mut self) {
         unsafe {
-            println!("Deleting buffers - vao:{}, vbo - {}, ebo - {}", self.vao, self.vbo, self.ebo);
+            println!("Deleting mesh buffers : vao:{}, vbo : {}, ebo : {}", self.vao, self.vbo, self.ebo);
             gl::DeleteVertexArrays(1, &self.vao);
             gl::DeleteBuffers(1, &self.vbo);
             gl::DeleteBuffers(1, &self.ebo);

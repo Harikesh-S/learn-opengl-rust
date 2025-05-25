@@ -1,16 +1,10 @@
 // Model Loading using tobj
 
-use std::ffi::CString;
-use std::ptr;
-use std::mem;
 use std::ffi::CStr;
-use std::path::Path;
-use std::os::raw::c_void;
 
 use gl::{self, types::*};
 use glfw::{self, Context};
 use nalgebra_glm as glm;
-use tobj;
 
 use crate::model::Model;
 use crate::shader::Shader;
@@ -54,20 +48,19 @@ pub fn main_3_1() {
 
     // Shader Program
     let default_shader = Shader::new("./src/_3_model_loading/shaders/1_t_default.vert","./src/_3_model_loading/shaders/1_t_default.frag");
-    //let default_shader = Shader::new("./src/_3_model_loading/shaders/1_t_default.vert","./src/_3_model_loading/shaders/1_t_default_color.frag");
-    //let light_shader = Shader::new("./src/_2_lighting/shaders/1_0_default.vert","./src/_2_lighting/shaders/3_1_light.frag");
     
-    let mut object = Model::new();
-    // object.load_model("./resources/models/vehicle-vintage-racer.obj");
-    object.load_model("./resources/models/Sting-Sword.obj");
-    let mut object_car = Model::new();
-    object_car.load_model("./resources/models/vehicle-vintage-racer.obj");
-
+    // Loading models
+    let mut model_ferris = Model::new();
+    model_ferris.load_model("./resources/models/ferris3d_v1.0.obj");
+    let mut model_container = Model::new();
+    model_container.load_model("./resources/models/container.obj");
+    let mut model_container_emissive = Model::new();
+    model_container_emissive.load_model("./resources/models/container_emissive.obj");
 
     // --Initial Config - Viewport------------------------------------------------------------------------------------------------- //
 
     // Camera
-    let mut camera : FreeCamera = FreeCamera::new(glm::vec3(-2.,0.,2.), 0., 0., -40., WINDOW_WIDTH, WINDOW_HEIGHT);
+    let mut camera : FreeCamera = FreeCamera::new(glm::vec3(0.,0.5,4.), 0., 0., -90., WINDOW_WIDTH, WINDOW_HEIGHT);
 
     // Viewport
     unsafe {
@@ -84,7 +77,16 @@ pub fn main_3_1() {
 
     // Time
     let mut prev_time = glfw.get_time();
-    let mut emissive: f32 = 1.;
+
+    // Model matrices and transformations
+    let translation_right = glm::translation(&glm::vec3(1.,0.,0.));
+    let translation_left = glm::translation(&glm::vec3(-1.,0.,0.));
+    let rotation = glm::rotation(f32::to_radians(45.), &glm::vec3(1.,0.,1.));
+
+    let identity = glm::Mat4::identity();
+    let model_matrix_f = identity;
+    let model_matrix_c = translation_right * glm::scale(&(rotation * identity), &glm::vec3(0.25, 0.25, 0.25));
+    let model_matrix_c_e = translation_left * glm::scale(&(rotation * identity), &glm::vec3(0.25, 0.25, 0.25));
 
     // --Render loop--------------------------------------------------------------------------------------------------------------- //
 
@@ -112,13 +114,6 @@ pub fn main_3_1() {
                 glfw::WindowEvent::Key(glfw::Key::Escape, _, glfw::Action::Press, _) => {
                     window.set_should_close(true)
                 }
-                glfw::WindowEvent::Key(glfw::Key::Space, _, glfw::Action::Press, _) => {
-                    emissive = (emissive + 0.25) as f32;
-                    if emissive > 1.0 {
-                        emissive = 0.0;
-                    }
-                    println!("Updating emissive {}", emissive);
-                }
                 glfw::WindowEvent::FramebufferSize(w, h) => unsafe {
                     gl::Viewport(0, 0, w, h);
                 }
@@ -128,7 +123,6 @@ pub fn main_3_1() {
 
         // Rendering
         unsafe {
-
             // Clearing the screen
             gl::ClearColor(0.1, 0.1, 0.1, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
@@ -138,41 +132,27 @@ pub fn main_3_1() {
             
             // Set transformation matrices
             camera.set_cam_matrix(&default_shader);
-
-            let model = glm::Mat4::identity();
-            let model = glm::scale(&model, &glm::vec3(0.25,0.25,0.25));
-            //let model = glm::rotate(&model, f32::to_radians(90.), &glm::Vec3::x_axis());
-             default_shader.set_mat4(c_str!("model"), model);
-            
-            // updating emission
-            //default_shader.set_float(c_str!("material.emissive_strength"),  f32::sin(glfw.get_time() as f32)); 
-            default_shader.set_float(c_str!("material.emissive_strength"),  emissive); 
-
-
-
-            // Set material
-            // default_shader.set_int(c_str!("material.diffuse"), 0);  // Using texture unit 0 for diffuse map
-            // default_shader.set_int(c_str!("material.specular"), 1);  // Using texture unit 1 for specular map
-            default_shader.set_float(c_str!("material.shininess"),  32.0); 
-            // View position for specular highlights based on viewer
             default_shader.set_vec3(c_str!("viewPos"), camera.position);    // View position for specular highlights
             
-            // Used by directional light
-            default_shader.set_vec3_values(c_str!("dirLight.ambient"),  0.1, 0.1, 0.1);      // low because we dont want amient color to be too dominant
-            default_shader.set_vec3_values(c_str!("dirLight.diffuse"),  0.5, 0.5, 0.5);      // exact color that we want
-            default_shader.set_vec3_values(c_str!("dirLight.specular"),  1.0,1.0,1.0);         // high because we want the light's color in the highlight
-            default_shader.set_vec3_values(c_str!("dirLight.direction"), 0., -1., 1.); // direction that the light is pointing to
+            // Set light uniforms - directional light
+            default_shader.set_vec3_values(c_str!("dirLight.ambient"),  0.5, 0.5, 0.5);
+            default_shader.set_vec3_values(c_str!("dirLight.diffuse"),  1.0, 1.0, 1.0);
+            default_shader.set_vec3_values(c_str!("dirLight.specular"),  1.0,1.0,1.0);
+            // rotating the directional light
+            let light_dir = glm::rotate_vec3(&glm::vec3(0.,1.,0.),glfw.get_time() as f32, &glm::Vec3::z_axis());
+            default_shader.set_vec3(c_str!("dirLight.direction"), light_dir);
 
-            object.draw(&default_shader);
-            let model = glm::Mat4::identity();
-            let model = glm::translate(&model, &glm::vec3(4.,0.,0.));
-            default_shader.set_mat4(c_str!("model"), model);
-            object_car.draw(&default_shader);
-            // // Set the maps (textures)
-            // gl::ActiveTexture(gl::TEXTURE0);
-            // gl::BindTexture(gl::TEXTURE_2D, diffuse_map);
-            // gl::ActiveTexture(gl::TEXTURE1);
-            // gl::BindTexture(gl::TEXTURE_2D, specular_map);
+            // Drawing ferris at the center
+            default_shader.set_mat4(c_str!("model"), model_matrix_f);
+            model_ferris.draw(&default_shader);
+
+            // Drawing the first container to the right
+            default_shader.set_mat4(c_str!("model"), model_matrix_c);
+            model_container.draw(&default_shader);
+            
+            // Drawing the second container to the left
+            default_shader.set_mat4(c_str!("model"), model_matrix_c_e);
+            model_container_emissive.draw(&default_shader);   
         }
 
         // Swap front and back buffers
@@ -184,12 +164,12 @@ pub fn main_3_1() {
     
     // --Terminate----------------------------------------------------------------------------------------------------------------- //
 
-    unsafe {
+    //unsafe {
         // gl::DeleteVertexArrays(1, &vao);
         // gl::DeleteBuffers(1, &vbo);
         // gl::DeleteVertexArrays(1, &light_vao);
         // gl::DeleteBuffers(1, &light_vbo);
-    }
+    //}
 }
 
 /// Function to process input
