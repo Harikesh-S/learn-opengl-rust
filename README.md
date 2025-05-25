@@ -1,3 +1,5 @@
+
+
 ## What is this?
 
 Rust port of me following through [learn opengl](https://learnopengl.com/Introduction), including all chapters and exercises. I'm new to OpenGl and rust so this may not be the best way to implement any of this.  
@@ -7,7 +9,7 @@ I've also referred [bwasty/learn-opengl-rs](https://github.com/bwasty/learn-open
 
 ## How to run
 
-This is directly from bwasty's implementation. Run any tutorial with `cargo run 1_7_1`.  
+This is directly from bwasty's implementation. Run any tutorial with `cargo run --release 1_7_1`.  
 Refer main.rs for the complete list.
 
 ## Setup
@@ -18,4 +20,18 @@ Cargo.toml includes all dependencies. Unlike c++ downloading and linking glfw/gl
 
 - I've used nalgebra-glm instead of cgmath. Most methods from glm have a direct equivalent.
 
-Flashlight texture from [80+ sprites for particles, light cookies and shaders (public domain)](https://www.reddit.com/r/gamedev/comments/8v3x2q/80_sprites_for_particles_light_cookies_and/)
+## Chapter Summary
+
+### Chapter 1
+
+Window creation using GLFW, buffer creation, shaders, transformations and camera.
+
+### Chapter 2
+
+Lighting using Phong shading  
+- Flashlight texture from [80+ sprites for particles, light cookies and shaders (public domain)](https://www.reddit.com/r/gamedev/comments/8v3x2q/80_sprites_for_particles_light_cookies_and/)
+
+### Chapter 3
+
+Model loading using tobj.  
+- Ferris model from [RayMarch/ferris3d](https://github.com/RayMarch/ferris3d) - exported using blender
