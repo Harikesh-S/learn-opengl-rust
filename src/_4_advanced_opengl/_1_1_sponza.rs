@@ -67,7 +67,7 @@ pub fn main_4_1_1() {
     // --Initial Config - Viewport------------------------------------------------------------------------------------------------- //
 
     // Camera
-    let mut camera : FreeCamera = FreeCamera::new(glm::vec3(0.,0.5,4.), 0., 0., -90., WINDOW_WIDTH, WINDOW_HEIGHT);
+    let mut camera : FreeCamera = FreeCamera::new(glm::vec3(-1220.,100.,-45.), 0., 0., 0., WINDOW_WIDTH, WINDOW_HEIGHT);
     camera.near_plane = 1.; // to reduce z fighting
     camera.far_plane = 3000.; // needed since the model is very large without scaling down
     camera.speed = 100.; // needed since the model is very large without scaling down
@@ -88,6 +88,8 @@ pub fn main_4_1_1() {
 
     // Time
     let mut prev_time = glfw.get_time();
+    let mut frame_counter = 0;
+    let mut fps;
 
     // Model matrices and transformations
 
@@ -102,11 +104,16 @@ pub fn main_4_1_1() {
         let curr_time = glfw.get_time();
         let time_delta = curr_time - prev_time;
 
+        frame_counter += 1;
+
         // Update -- restricting to 60 ups
         if time_delta >= 1./60. { 
             process_input(&mut window);
             camera.update(&mut window, time_delta);
+            fps = format!("FPS : {} / MS : {}", (1./time_delta as f32)*(frame_counter as f32) , (time_delta as f32/(frame_counter as f32)*1000.));
+            window.set_title(format!("{} {}",WINDOW_TITLE,fps).as_str());
             prev_time = curr_time;
+            frame_counter = 0;
         }
 
         // Fps is not restricted, but it could be with the same time_delta
@@ -148,12 +155,12 @@ pub fn main_4_1_1() {
             default_shader.set_vec3(c_str!("viewPos"), camera.position);    // View position for specular highlights
             
             // Set light uniforms - directional light
-            default_shader.set_vec3_values(c_str!("dirLight.ambient"),  0.5, 0.5, 0.5);
+            default_shader.set_vec3_values(c_str!("dirLight.ambient"),  0.2, 0.2, 0.2);
             default_shader.set_vec3_values(c_str!("dirLight.diffuse"),  1.0, 1.0, 1.0);
             default_shader.set_vec3_values(c_str!("dirLight.specular"),  1.0,1.0,1.0);
             // rotating the directional light
             //let light_dir = glm::rotate_vec3(&glm::vec3(0.,1.,0.),glfw.get_time() as f32, &glm::Vec3::z_axis());
-            let light_dir = glm::vec3(0.,1.,0.);
+            let light_dir = glm::vec3(0.,1.,1.);
             default_shader.set_vec3(c_str!("dirLight.direction"), light_dir);
 
             // For depth buffer - linear / fog
