@@ -27,6 +27,30 @@ impl Model {
         }
     }
 
+    /// Function to create and store a plane mesh
+    pub fn load_plane(&mut self, texture_path: &str, scale: f32, tex_scale: f32) {
+        let mut vertices = Vec::from([
+                Vertex{position: glm::vec3(-1.,-1., 0.), normal:glm::vec3(0.,0.,1.), tex_coords:glm::vec2(0.,0.)},
+                Vertex{position: glm::vec3( 1.,-1., 0.), normal:glm::vec3(0.,0.,1.), tex_coords:glm::vec2(1.,0.)},
+                Vertex{position: glm::vec3( 1., 1., 0.), normal:glm::vec3(0.,0.,1.), tex_coords:glm::vec2(1.,1.)},
+                Vertex{position: glm::vec3(-1.,1., 0.), normal:glm::vec3(0.,0.,1.), tex_coords:glm::vec2(0.,1.)},
+            ]);
+
+        for vertex in &mut vertices {
+            vertex.position *= scale;
+            vertex.tex_coords *= tex_scale;
+        }
+        self.meshes.push(Mesh::new(
+            vertices,
+            Vec::from([0,1,3, 1,2,3]),
+            Vec::from([Material::Texture {
+                id: unsafe { Self::load_texture(texture_path, "") },
+                type_: MaterialType::DiffuseTex,
+                path: texture_path.into()}
+            ])
+        ));
+    }
+
     /// Function to load a 3D model from path using tobj
     pub fn load_model(&mut self, path : &str) {
         println!("Loading model from {}", path);
@@ -104,54 +128,53 @@ impl Model {
         //println!("Loading texture from path {}", path);
 
         let texture = Material::Texture {
-            id: unsafe { load_texture(path, &self.directory) },
+            id: unsafe { Self::load_texture(path, &self.directory) },
             type_: type_name,
             path: path.into()
         };
         self.textures_loaded.push(texture.clone());
         texture
     }
-}
 
+    pub unsafe fn load_texture(path: &str, directory: &str) -> GLuint {
+        let absolute_path = Path::new(directory).join(path);
+        let mut texture: GLuint = 0;
+        unsafe {
+            // Generate Texture
+            gl::GenTextures(1, &mut texture);
 
-unsafe fn load_texture(path: &str, directory: &str) -> GLuint {
-    let absolute_path = Path::new(directory).join(path);
-    let mut texture: GLuint = 0;
-    unsafe {
-        // Generate Texture
-        gl::GenTextures(1, &mut texture);
+            // Bind texture to target and texture unit
+            gl::ActiveTexture(gl::TEXTURE1);
+            gl::BindTexture(gl::TEXTURE_2D, texture);
 
-        // Bind texture to target and texture unit
-        gl::ActiveTexture(gl::TEXTURE1);
-        gl::BindTexture(gl::TEXTURE_2D, texture);
+            // Interpolation
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
 
-        // Interpolation
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
+            // Border wrap
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S,gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D,gl::TEXTURE_WRAP_T,gl::REPEAT as i32);
+            // Only required for CLAMP_TO_BORDER
+            //gl::TexParameterfv(gl::TEXTURE_2D,gl::TEXTURE_BORDER_COLOR,[1.0, 1.0, 1.0, 1.0].as_ptr());
+            
+            //println!("Loading image from path {}", absolute_path.to_str().unwrap());
+            // Loading image from file
+            let img = image::open(&absolute_path).expect("Failed to load texture").flipv().into_rgba8();
 
-        // Border wrap
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S,gl::REPEAT as i32);
-        gl::TexParameteri(gl::TEXTURE_2D,gl::TEXTURE_WRAP_T,gl::REPEAT as i32);
-        // Only required for CLAMP_TO_BORDER
-        //gl::TexParameterfv(gl::TEXTURE_2D,gl::TEXTURE_BORDER_COLOR,[1.0, 1.0, 1.0, 1.0].as_ptr());
-        
-        //println!("Loading image from path {}", absolute_path.to_str().unwrap());
-        // Loading image from file
-        let img = image::open(&absolute_path).expect("Failed to load texture").flipv().into_rgba8();
+            //println!("Storing texture data");
+            // Store data into texture
+            gl::TexImage2D(gl::TEXTURE_2D,0,gl::RGBA as i32,img.width() as i32,img.height() as i32,0,gl::RGBA as u32,gl::UNSIGNED_BYTE,img.as_ptr() as *const u8 as *const c_void);
 
-        //println!("Storing texture data");
-        // Store data into texture
-        gl::TexImage2D(gl::TEXTURE_2D,0,gl::RGBA as i32,img.width() as i32,img.height() as i32,0,gl::RGBA as u32,gl::UNSIGNED_BYTE,img.as_ptr() as *const u8 as *const c_void);
+            //println!("Generating mip maps");
+            // Generate mip maps for the texture
+            gl::GenerateMipmap(gl::TEXTURE_2D);
 
-        //println!("Generating mip maps");
-        // Generate mip maps for the texture
-        gl::GenerateMipmap(gl::TEXTURE_2D);
+            // Unbind texture
+            gl::BindTexture(gl::TEXTURE_2D, 0);
 
-        // Unbind texture
-        gl::BindTexture(gl::TEXTURE_2D, 0);
-
-    };
-    texture
+        };
+        texture
+    }
 }
 
 impl Drop for Model {

@@ -4,13 +4,12 @@
 // extern crate tobj;
 
 // mod common;
+// mod utils;
 mod shader;
 mod macros;
 mod camera;
 mod model;
 mod mesh;
-// mod model;
-// mod utils;
 
 #[cfg(feature = "chapter-1")]
 mod _1_getting_started;
@@ -106,6 +105,7 @@ fn main() {
         #[cfg(feature = "chapter-4")] "4_1"   => main_4_1(),
         #[cfg(feature = "chapter-4")] "4_1_1"   => main_4_1_1(),
         #[cfg(feature = "chapter-4")] "4_2_1" => main_4_2_1(),
+        #[cfg(feature = "chapter-4")] "4_3"   => main_4_3(),
         // #[cfg(feature = "chapter-4")] "4_1_1" => main_4_1_1(),
         // #[cfg(feature = "chapter-4")] "4_1_2" => main_4_1_2(),
         // #[cfg(feature = "chapter-4")] "4_2"   => main_4_2(),

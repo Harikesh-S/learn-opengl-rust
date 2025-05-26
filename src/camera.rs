@@ -65,7 +65,7 @@ pub struct FreeCamera {
     // Internal flags
     first_click : bool,             // is this the first click?
     calculate_cam_matrix : bool,    // should matrix be recalculated?
-    is_matrix_updated : bool        // should matrix be updated in the shader?
+    pub is_matrix_updated : bool        // should matrix be updated in the shader?
     
     // all of these are private since its updated using camera.update()
     // but these could be made public/getset to update them in the main loop

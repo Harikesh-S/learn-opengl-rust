@@ -1,4 +1,4 @@
-use std::ffi::{CString,CStr};
+use std::ffi::{CString,CStr}; // TODO update all set functions to borrow value instead of copy
 use std::fs::File;
 use std::io::Read;
 use std::ptr;
