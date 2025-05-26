@@ -38,6 +38,11 @@ Model loading using tobj.
 
 ### Chapter 4
 
+#### Depth Buffer
+
+Various depth buffer modes and visualizations.
+- [Sponza model](https://github.com/jimmiebergmann/Sponza) (not in repo, please download the model and update the path in _1_1_sponza.rs)
+
 #### Stencil Buffer
 
 - Using the stencil buffer to implement object outlining.

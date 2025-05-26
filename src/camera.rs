@@ -51,7 +51,7 @@ pub struct FreeCamera {
     cam_matrix : glm::Mat4, // projection * view
 
     // Movement speed
-    speed : f32,
+    pub speed : f32,
     shift_multiplier : f32,
     roll_speed : f32,
     sensitivity : f32,
@@ -59,8 +59,8 @@ pub struct FreeCamera {
 
     // Perspective
     fov : f32,
-    near_plane : f32,
-    far_plane : f32,
+    pub near_plane : f32,
+    pub far_plane : f32,
 
     // Internal flags
     first_click : bool,             // is this the first click?
