@@ -11,7 +11,7 @@ use crate::model::Model;
 use crate::shader::Shader;
 use crate::camera::{FreeCamera, Camera};
 
-const MESSAGE : &str = "Chapter 4 : Part 1 : Sponza model, N - change shader (Normal, Visualize Depth Buffer Linear, Fog)";
+const MESSAGE : &str = "Chapter 4 : Part 1 : Sponza model, N - change shader (Normal, Visualize Depth Buffer Linear, Fog)\nPlease download the model (link in README) and update the path in this fileFil";
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 800;
 const WINDOW_TITLE: &str = "Depth Buffer";
