@@ -101,7 +101,7 @@ impl Model {
             }
         }
         
-        println!("Loading texture from path {}", path);
+        //println!("Loading texture from path {}", path);
 
         let texture = Material::Texture {
             id: unsafe { load_texture(path, &self.directory) },
@@ -158,8 +158,8 @@ impl Drop for Model {
     fn drop(&mut self) {
         for texture in &self.textures_loaded {
             match texture {
-                Material::Texture { id, path, type_: _ } => {
-                    println!("Deleting texture {} : {}",id, path);
+                Material::Texture { id, path: _, type_: _ } => {
+                    //println!("Deleting texture {} : {}",id, path);
                     unsafe {
                         gl::DeleteTextures(1, id as *const u32);
                     }},

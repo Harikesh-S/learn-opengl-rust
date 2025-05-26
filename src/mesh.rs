@@ -179,7 +179,7 @@ impl Mesh {
 impl Drop for Mesh {
     fn drop(&mut self) {
         unsafe {
-            println!("Deleting mesh buffers : vao:{}, vbo : {}, ebo : {}", self.vao, self.vbo, self.ebo);
+            //println!("Deleting mesh buffers : vao:{}, vbo : {}, ebo : {}", self.vao, self.vbo, self.ebo);
             gl::DeleteVertexArrays(1, &self.vao);
             gl::DeleteBuffers(1, &self.vbo);
             gl::DeleteBuffers(1, &self.ebo);
