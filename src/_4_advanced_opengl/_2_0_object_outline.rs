@@ -1,4 +1,4 @@
-// Object outlining using stencil
+// Object outlining using stencil buffer
 
 use std::ffi::CStr;
 
@@ -15,7 +15,7 @@ const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 800;
 const WINDOW_TITLE: &str = "Stencil Testing";
 
-pub fn main_4_2_1() {
+pub fn main_4_2() {
 
     println!("{}\n{}", WINDOW_TITLE, MESSAGE);
 
@@ -48,7 +48,7 @@ pub fn main_4_2_1() {
 
     // Shader Program
     let default_shader = Shader::new("./src/_3_model_loading/shaders/1_default.vert","./src/_3_model_loading/shaders/1_default.frag");
-    let outline_shader = Shader::new("./src/_3_model_loading/shaders/1_default.vert","./src/_4_advanced_opengl/shaders/2_1_outline_shader.frag");
+    let outline_shader = Shader::new("./src/_3_model_loading/shaders/1_default.vert","./src/_4_advanced_opengl/shaders/2_outline_shader.frag");
     
     // Loading models
     let mut model_ferris = Model::new();
