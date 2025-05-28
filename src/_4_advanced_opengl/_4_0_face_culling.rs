@@ -21,7 +21,7 @@ const MESSAGE : &str = "Chapter 4 : Part 4 : Face Culling, Space - Toggle face c
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 800;
 const WINDOW_TITLE: &str = "Face Culling";
-const WIREFRAME_MODE : bool = true;
+const WIREFRAME_MODE : bool = true; // diable default wireframe mode here
 
 const MODEL_POSITION: glm::Vec3 = glm::Vec3::new(0.,0.,0.);
 

@@ -2,7 +2,7 @@
 // Displays a plane that is subdivided to view the effect
 // Note: You may have to move the camera to view the model with higher subdivision levels, not sure why - maybe reset cam matrix?
 
-const SUBDIVIDE_MODEL : u32 = 8; 
+const SUBDIVIDE_MODEL : u32 = 10; 
 
 use std::ffi::CStr;
 
@@ -60,8 +60,11 @@ pub fn main_4_4_e() {
     let mut model = Model::new();
     //model.load_model("./resources/models/unecessarily_detailed_torus.obj"); // just a torus from blender with max vertices subdivided 
     model.load_plane_blank(1.0);
-    //model.load_model(MODEL_PATH);   
+
+    // Subdivision 
+    let start_time = glfw.get_time();
     model.subdivide_meshes(SUBDIVIDE_MODEL);
+    println!("Total Time taken for subdivision : {}", glfw.get_time()-start_time);
 
     // Set texture unit 0 as a blank texture
     // Required since shader is expecting a emission texture but none are provided

@@ -202,7 +202,7 @@ impl Mesh {
             let mut new_vertices: Vec<Vertex> = Vec::with_capacity(final_vertices.len()*2);
             let mut new_indices: Vec<GLuint> = Vec::with_capacity(final_indices.len()*2);
             // Hashmap to avoid duplicating vertices
-            let mut new_vertex_hash: HashMap<String, GLuint> = HashMap::new();
+            let mut new_vertex_hash: HashMap<PositionHash, GLuint> = HashMap::new();
 
             // For each triangle
             for j in 0..(final_indices.len() / 3) {
@@ -261,7 +261,7 @@ impl Mesh {
         self.setup_mesh();
     }
 
-    fn get_center_vertex(vertices : &mut Vec<Vertex>, vertex_hash : &mut HashMap<String, GLuint>, v1 : &Vertex, v2 : &Vertex) -> GLuint {
+    fn get_center_vertex(vertices : &mut Vec<Vertex>, vertex_hash : &mut HashMap<PositionHash, GLuint>, v1 : &Vertex, v2 : &Vertex) -> GLuint {
         let (p1,p2) = (&v1.position, &v2.position);
         let (n1, n2) = (&v1.normal, &v2.normal);
         let (t1, t2) = (&v1.tex_coords, &v2.tex_coords);
@@ -274,7 +274,7 @@ impl Mesh {
         Self::get_vertex(vertices,vertex_hash, &center_vertex)
     }
 
-    fn get_vertex(vertices : &mut Vec<Vertex>, vertex_hash : &mut HashMap<String, GLuint>, new_vertex : &Vertex) -> GLuint {
+    fn get_vertex(vertices : &mut Vec<Vertex>, vertex_hash : &mut HashMap<PositionHash, GLuint>, new_vertex : &Vertex) -> GLuint {
         let hash = Self::get_vertex_hash(&new_vertex);
         match vertex_hash.get(&hash) {
             Some(position) => {
@@ -291,8 +291,8 @@ impl Mesh {
 
     }
 
-    fn get_vertex_hash(vertex : &Vertex) -> String { // probably better to use a struct for the hash key https://stackoverflow.com/questions/39638363/how-can-i-use-a-hashmap-with-f64-as-key-in-rust
-        format!("{:?}", vertex.position)
+    fn get_vertex_hash(vertex : &Vertex) -> PositionHash { // better hash function using mantissa-exponent-sign triplet
+        PositionHash::new(vertex.position.x as f64, vertex.position.y as f64, vertex.position.z as f64)
     }
 }
 
@@ -305,4 +305,29 @@ impl Drop for Mesh {
             gl::DeleteBuffers(1, &self.ebo);
         }
     }
+}
+
+// Struct to hold position hash for position (x,y,z)
+#[derive(Hash, Eq, PartialEq)]
+struct PositionHash((u64, i16, i8),(u64, i16, i8),(u64, i16, i8));
+
+impl PositionHash {
+    fn new(val: f64, val2 : f64, val3 : f64) -> PositionHash {
+        PositionHash(integer_decode(val),integer_decode(val2),integer_decode(val3))
+    }
+}
+
+/// From depreciated integer_decode()
+fn integer_decode(val: f64) -> (u64, i16, i8) {
+    let bits: u64 = unsafe { mem::transmute(val) };
+    let sign: i8 = if bits >> 63 == 0 { 1 } else { -1 };
+    let mut exponent: i16 = ((bits >> 52) & 0x7ff) as i16;
+    let mantissa = if exponent == 0 {
+        (bits & 0xfffffffffffff) << 1
+    } else {
+        (bits & 0xfffffffffffff) | 0x10000000000000
+    };
+
+    exponent -= 1023 + 52;
+    (mantissa, exponent, sign)
 }
