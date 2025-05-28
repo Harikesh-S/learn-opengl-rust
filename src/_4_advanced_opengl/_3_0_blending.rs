@@ -76,12 +76,13 @@ pub fn main_4_3() {
 
     // Set texture unit 0 as a blank texture
     // Required since shader is expecting a emission texture but none are provided
-    let blank_texture : GLuint;
-    unsafe { 
-        blank_texture = Model::load_texture("./resources/textures/blank.png","");
-        gl::ActiveTexture(gl::TEXTURE0);
-        gl::BindTexture(gl::TEXTURE_2D, blank_texture);
-    }
+    // Not required since we have use_texture_* set in the shader, but this is another option for the same effect
+    // let blank_texture : GLuint;
+    // unsafe { 
+    //     blank_texture = Model::load_texture("./resources/textures/blank.png","");
+    //     gl::ActiveTexture(gl::TEXTURE0);
+    //     gl::BindTexture(gl::TEXTURE_2D, blank_texture);
+    // }
 
 
     // --Initial Config - Viewport------------------------------------------------------------------------------------------------- //
@@ -213,13 +214,13 @@ pub fn main_4_3() {
     
     // --Terminate----------------------------------------------------------------------------------------------------------------- //
 
-    unsafe {
-        // gl::DeleteVertexArrays(1, &vao);
-        // gl::DeleteBuffers(1, &vbo);
-        // gl::DeleteVertexArrays(1, &light_vao);
-        // gl::DeleteBuffers(1, &light_vbo);
-        gl::DeleteTextures(1, &blank_texture);
-    }
+    // unsafe {
+    //     // gl::DeleteVertexArrays(1, &vao);
+    //     // gl::DeleteBuffers(1, &vbo);
+    //     // gl::DeleteVertexArrays(1, &light_vao);
+    //     // gl::DeleteBuffers(1, &light_vbo);
+    //     gl::DeleteTextures(1, &blank_texture);
+    // }
 }
 
 /// Function to process input

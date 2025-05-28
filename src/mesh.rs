@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ffi::CString;
 use std::ptr;
 use std::mem;
@@ -11,6 +12,7 @@ use crate::shader::Shader;
 
 /// Struct to store vertex data
 #[repr(C)] // align struct like C/C++
+#[derive(Clone)]
 pub struct Vertex {
     pub position : glm::Vec3,
     pub normal : glm::Vec3,
@@ -168,11 +170,129 @@ impl Mesh {
                 }
             }
 
+            // Texture counts - to avoid branching in the shader
+            shader.set_int(c_str!("material.use_texture_diff"), (diff_num>0) as i32);
+            shader.set_int(c_str!("material.use_texture_spec"), (spec_num>0) as i32);
+            shader.set_int(c_str!("material.use_texture_emis"), (emis_num>0) as i32);
+
+            // Fallback color for diffuse and specular lighting
+            if diff_num == 0 {
+                shader.set_vec4_values(c_str!("material.fallback_color"), 1., 1., 1., 1.);
+            }
+
             // Draw the mesh
             gl::BindVertexArray(self.vao);
             gl::DrawElements(gl::TRIANGLES, self.indices.len() as i32, gl::UNSIGNED_INT, ptr::null());
             gl::BindVertexArray(0);
         }
+    }
+
+    /// Subdivides the mesh, used in 4_4 to reuse the same model
+    pub fn subdivide(&mut self, n : u32) {
+        // Vecs to store intermediate results
+        let mut final_vertices: Vec<Vertex> = self.vertices.clone();
+        let mut final_indices: Vec<GLuint> = self.indices.clone();
+
+        println!("Mesh before subdivision - Vertices {} , Triangles {}", self.vertices.len(), self.indices.len()/3);
+
+        for i in 0..n {
+            println!("Running Subdivision level {}", i+1);
+
+            // Vecs to store current result
+            let mut new_vertices: Vec<Vertex> = Vec::with_capacity(final_vertices.len()*2);
+            let mut new_indices: Vec<GLuint> = Vec::with_capacity(final_indices.len()*2);
+            // Hashmap to avoid duplicating vertices
+            let mut new_vertex_hash: HashMap<String, GLuint> = HashMap::new();
+
+            // For each triangle
+            for j in 0..(final_indices.len() / 3) {
+                // Get the vertices
+                let vert1 = &final_vertices[final_indices[j*3] as usize];
+                let vert2 = &final_vertices[final_indices[j*3+1] as usize];
+                let vert3 = &final_vertices[final_indices[j*3+2] as usize];
+
+                //println!("Face {} - {} {} {}", j, vert1, vert2, vert3);
+
+                // Add existing vertices to new vertices and get the index
+                let new_ver1 = Self::get_vertex(&mut new_vertices,&mut new_vertex_hash, vert1);
+                let new_ver2 = Self::get_vertex(&mut new_vertices,&mut new_vertex_hash, vert2);
+                let new_ver3 = Self::get_vertex(&mut new_vertices,&mut new_vertex_hash, vert3);
+                // Add mid point vertices to new vertices and get the index
+                let new_vera = Self::get_center_vertex(&mut new_vertices,&mut new_vertex_hash, vert1, vert2);
+                let new_verb = Self::get_center_vertex(&mut new_vertices,&mut new_vertex_hash, vert2, vert3);
+                let new_verc = Self::get_center_vertex(&mut new_vertices,&mut new_vertex_hash, vert3, vert1);
+
+                //println!("Face {} - {} {} {}", j, new_ver1, new_ver2, new_ver3);
+
+                // Add new triangles
+                let triangles = [
+                    new_ver1, new_vera, new_verc,
+                    new_ver2, new_verb, new_vera,
+                    new_ver3, new_verc, new_verb,
+                    new_vera, new_verb, new_verc,
+                ];
+                for point in triangles {
+                    new_indices.push(point as GLuint)
+                }
+            }
+
+            // Overwrite intermediate results
+            final_vertices = new_vertices;
+            final_indices = new_indices;
+
+        }
+        
+        // Delete old buffers - probably better to subdivide before creating the buffers
+        unsafe {
+            gl::DeleteVertexArrays(1, &self.vao);
+            gl::DeleteBuffers(1, &self.vbo);
+            gl::DeleteBuffers(1, &self.ebo);
+        }
+        
+        self.vertices = final_vertices;
+        self.indices = final_indices;
+        //self.materials = t;
+        self.vao = 0;
+        self.vbo = 0;
+        self.ebo = 0;
+
+        println!("Mesh before subdivision - Vertices {} , Triangles {}", self.vertices.len(), self.indices.len()/3);
+
+        self.setup_mesh();
+    }
+
+    fn get_center_vertex(vertices : &mut Vec<Vertex>, vertex_hash : &mut HashMap<String, GLuint>, v1 : &Vertex, v2 : &Vertex) -> GLuint {
+        let (p1,p2) = (&v1.position, &v2.position);
+        let (n1, n2) = (&v1.normal, &v2.normal);
+        let (t1, t2) = (&v1.tex_coords, &v2.tex_coords);
+        let center_vertex = Vertex{
+            position : glm::vec3((p1.x+p2.x)/2.,(p1.y+p2.y)/2.,(p1.z+p2.z)/2.),
+            normal : glm::vec3((n1.x+n2.x)/2.,(n1.y+n2.y)/2.,(n1.z+n2.z)/2.),
+            tex_coords : glm::vec2((t1.x+t2.x)/2.,(t1.y+t2.y)/2.)
+        };
+
+        Self::get_vertex(vertices,vertex_hash, &center_vertex)
+    }
+
+    fn get_vertex(vertices : &mut Vec<Vertex>, vertex_hash : &mut HashMap<String, GLuint>, new_vertex : &Vertex) -> GLuint {
+        let hash = Self::get_vertex_hash(&new_vertex);
+        match vertex_hash.get(&hash) {
+            Some(position) => {
+                *position
+            },
+            None => {
+                // adding vertex and return new vert
+                vertices.push(new_vertex.clone());
+                let position = (vertices.len()-1) as GLuint;
+                vertex_hash.insert(hash, position);
+                position
+            },
+        }
+
+    }
+
+    fn get_vertex_hash(vertex : &Vertex) -> String { // probably better to use a struct for the hash key https://stackoverflow.com/questions/39638363/how-can-i-use-a-hashmap-with-f64-as-key-in-rust
+        format!("{:?}", vertex.position)
     }
 }
 

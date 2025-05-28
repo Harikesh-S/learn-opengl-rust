@@ -1,5 +1,8 @@
-// Loading sponza model, with depth buffer visualization
-// Press N to change shader
+// Implementing subdivision for _4_0_face_culling
+// Displays a plane that is subdivided to view the effect
+// Note: You may have to move the camera to view the model with higher subdivision levels, not sure why - maybe reset cam matrix?
+
+const SUBDIVIDE_MODEL : u32 = 8; 
 
 use std::ffi::CStr;
 
@@ -11,12 +14,15 @@ use crate::model::Model;
 use crate::shader::Shader;
 use crate::camera::{FreeCamera, Camera};
 
-const MESSAGE : &str = "Chapter 4 : Part 1 : Sponza model, N - change shader (Normal, Visualize Depth Buffer Linear, Fog)\nPlease download the model (link in README) and update the path in this fileFil";
+const MESSAGE : &str = "Chapter 4 : Part 4 : Extra : Implementing subdivision, Space - Toggle face culling, M - Toggle Wireframe mode";
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 800;
-const WINDOW_TITLE: &str = "Depth Buffer";
+const WINDOW_TITLE: &str = "Face Culling";
+const WIREFRAME_MODE : bool = true;
 
-pub fn main_4_1_1() {
+const MODEL_POSITION: glm::Vec3 = glm::Vec3::new(0.,0.,0.);
+
+pub fn main_4_4_e() {
 
     println!("{}\n{}", WINDOW_TITLE, MESSAGE);
 
@@ -48,29 +54,30 @@ pub fn main_4_1_1() {
     // --Creating OpenGL Objects--------------------------------------------------------------------------------------------------- //
 
     // Shader Program
-    let shaders = [
-        Shader::new("./src/_3_model_loading/shaders/1_default.vert","./src/_4_advanced_opengl/shaders/1_default.frag"),
-        Shader::new("./src/_3_model_loading/shaders/1_default.vert","./src/_4_advanced_opengl/shaders/1_depth_buffer_linear.frag"),
-        Shader::new("./src/_3_model_loading/shaders/1_default.vert","./src/_4_advanced_opengl/shaders/1_fog.frag"),
-    ];
-    let shader_names = [
-        "Default","Visualize Depth Buffer - Linear","Fog"
-    ];
-    let mut current_shader = 0;
-
-    println!("Current shader : {}", shader_names[current_shader]);
-
+    let default_shader = Shader::new("./src/_3_model_loading/shaders/1_default.vert","./src/_4_advanced_opengl/shaders/4_default.frag");
+    
     // Loading models
-    let mut model_sponza = Model::new();
-    model_sponza.load_model("C:/Users/harik/Downloads/Sponza-master/Sponza-master/sponza.obj");
+    let mut model = Model::new();
+    //model.load_model("./resources/models/unecessarily_detailed_torus.obj"); // just a torus from blender with max vertices subdivided 
+    model.load_plane_blank(1.0);
+    //model.load_model(MODEL_PATH);   
+    model.subdivide_meshes(SUBDIVIDE_MODEL);
+
+    // Set texture unit 0 as a blank texture
+    // Required since shader is expecting a emission texture but none are provided
+    // Not required since we have use_texture_* set in the shader, but this is another option for the same effect
+    // let blank_texture : GLuint;
+    // unsafe { 
+    //     blank_texture = Model::load_texture("./resources/textures/blank.png","");
+    //     gl::ActiveTexture(gl::TEXTURE0);
+    //     gl::BindTexture(gl::TEXTURE_2D, blank_texture);
+    // }
+
 
     // --Initial Config - Viewport------------------------------------------------------------------------------------------------- //
 
     // Camera
-    let mut camera : FreeCamera = FreeCamera::new(glm::vec3(-1220.,100.,-45.), 0., 0., 0., WINDOW_WIDTH, WINDOW_HEIGHT);
-    camera.near_plane = 1.; // to reduce z fighting
-    camera.far_plane = 3000.; // needed since the model is very large without scaling down
-    camera.speed = 100.; // needed since the model is very large without scaling down
+    let mut camera : FreeCamera = FreeCamera::new(glm::vec3(0.,0.0,2.), 0., 0., -90., WINDOW_WIDTH, WINDOW_HEIGHT);
     camera.update_cam_matrix(false); // recalculate matrices
 
     // Viewport
@@ -79,30 +86,36 @@ pub fn main_4_1_1() {
     }
 
     // Wireframe mode - optional
-    // unsafe { gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE); }
+    if WIREFRAME_MODE {
+        unsafe { gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE); }
+    }
 
     // Enable depth testing to put display top most primitives
     unsafe {
         gl::Enable(gl::DEPTH_TEST);
     }
 
+    // Blending - for semi transparent objects
+    unsafe {
+        gl::Enable(gl::BLEND);
+        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);  
+    }
+
     // Time
     let mut prev_time = glfw.get_time();
     let mut frame_counter = 0;
-    let mut fps;
 
-    // Model matrices and transformations
-
+    // Get all model matrices
     let identity = glm::Mat4::identity();
-    let model_matrix_f = identity;
+    let model_matrix = glm::translate(&identity, &MODEL_POSITION);
 
-    glfw.set_swap_interval(glfw::SwapInterval::Sync(0));
+    glfw.set_swap_interval(glfw::SwapInterval::Sync(0)); // disable vsync to uncap fps
 
-    unsafe {
-    gl::Enable(gl::CULL_FACE);
-    gl::CullFace(gl::FRONT);
-    gl::FrontFace(gl::CW);
-}
+    // Variables changed by user for demo
+    let mut cull_face = false;
+    let mut wireframe_mode = WIREFRAME_MODE;
+    println!("Face culling : {}", cull_face);
+    println!("Wireframe Mode : {}", wireframe_mode);
 
     // --Render loop--------------------------------------------------------------------------------------------------------------- //
 
@@ -118,8 +131,9 @@ pub fn main_4_1_1() {
         if time_delta >= 1./60. { 
             process_input(&mut window);
             camera.update(&mut window, time_delta);
-            fps = format!("FPS : {} / MS : {}", (1./time_delta as f32)*(frame_counter as f32) , (time_delta as f32/(frame_counter as f32)*1000.));
-            window.set_title(format!("{} {}",WINDOW_TITLE,fps).as_str());
+
+            window.set_title(format!("{} Face Culling {} FPS : {} / MS : {}",WINDOW_TITLE,cull_face,(1./time_delta as f32)*(frame_counter as f32) , (time_delta as f32/(frame_counter as f32)*1000.)).as_str());
+            
             prev_time = curr_time;
             frame_counter = 0;
         }
@@ -135,10 +149,31 @@ pub fn main_4_1_1() {
                 glfw::WindowEvent::Key(glfw::Key::Escape, _, glfw::Action::Press, _) => {
                     window.set_should_close(true)
                 }
-                glfw::WindowEvent::Key(glfw::Key::N, _, glfw::Action::Press, _) => {
-                    current_shader = (current_shader + 1) % shaders.len();
-                    camera.force_set_cam_matrix(&shaders[current_shader]);
-                    println!("Current shader : {}", shader_names[current_shader]);
+                glfw::WindowEvent::Key(glfw::Key::Space, _, glfw::Action::Press, _) => {
+                    cull_face = !cull_face;
+                    println!("Face culling : {}", cull_face);
+                    if cull_face {
+                        unsafe {
+                            gl::Enable(gl::CULL_FACE);
+                            gl::CullFace(gl::FRONT);
+                            gl::FrontFace(gl::CW);
+                        }
+                    }
+                    else {
+                        unsafe {
+                            gl::Disable(gl::CULL_FACE);
+                        }
+                    }
+                }
+                glfw::WindowEvent::Key(glfw::Key::M, _, glfw::Action::Press, _) => {
+                    wireframe_mode = !wireframe_mode;
+                    println!("Wireframe Mode : {}", wireframe_mode);
+                    if wireframe_mode {
+                        unsafe { gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE); }
+                    }
+                    else {
+                        unsafe { gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL); }
+                    }
                 }
                 glfw::WindowEvent::FramebufferSize(w, h) => unsafe {
                     gl::Viewport(0, 0, w, h);
@@ -153,7 +188,6 @@ pub fn main_4_1_1() {
             gl::ClearColor(0.1, 0.1, 0.1, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-            let default_shader = &shaders[current_shader];
 
             // Drawing the object
             default_shader.use_program();
@@ -168,16 +202,12 @@ pub fn main_4_1_1() {
             default_shader.set_vec3_values(c_str!("dirLight.specular"),  1.0,1.0,1.0);
             // rotating the directional light
             //let light_dir = glm::rotate_vec3(&glm::vec3(0.,1.,0.),glfw.get_time() as f32, &glm::Vec3::z_axis());
-            let light_dir = glm::vec3(0.,1.,1.);
+            let light_dir = glm::vec3(-1.,-1.,0.);
             default_shader.set_vec3(c_str!("dirLight.direction"), light_dir);
 
-            // For depth buffer - linear / fog
-            default_shader.set_float(c_str!("far"), camera.far_plane);
-            default_shader.set_float(c_str!("near"), camera.near_plane);
-
-            // Drawing ferris at the center
-            default_shader.set_mat4(c_str!("model"), model_matrix_f);
-            model_sponza.draw(&default_shader);
+            // Drawing a lot of models, - 
+            default_shader.set_mat4(c_str!("model"), model_matrix);
+            model.draw(&default_shader);
         }
 
         // Swap front and back buffers
@@ -189,12 +219,13 @@ pub fn main_4_1_1() {
     
     // --Terminate----------------------------------------------------------------------------------------------------------------- //
 
-    //unsafe {
-        // gl::DeleteVertexArrays(1, &vao);
-        // gl::DeleteBuffers(1, &vbo);
-        // gl::DeleteVertexArrays(1, &light_vao);
-        // gl::DeleteBuffers(1, &light_vbo);
-    //}
+    // unsafe {
+    //     // gl::DeleteVertexArrays(1, &vao);
+    //     // gl::DeleteBuffers(1, &vbo);
+    //     // gl::DeleteVertexArrays(1, &light_vao);
+    //     // gl::DeleteBuffers(1, &light_vbo);
+    //     gl::DeleteTextures(1, &blank_texture);
+    // }
 }
 
 /// Function to process input

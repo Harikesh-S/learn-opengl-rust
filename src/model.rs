@@ -51,6 +51,37 @@ impl Model {
         ));
     }
 
+    /// Function to create and store a plane mesh - no texture
+    pub fn load_plane_blank(&mut self, scale: f32) {
+        let mut vertices = Vec::from([
+                Vertex{position: glm::vec3(-1.,-1., 0.), normal:glm::vec3(0.,0.,1.), tex_coords:glm::vec2(0.,0.)},
+                Vertex{position: glm::vec3( 1.,-1., 0.), normal:glm::vec3(0.,0.,1.), tex_coords:glm::vec2(1.,0.)},
+                Vertex{position: glm::vec3( 1., 1., 0.), normal:glm::vec3(0.,0.,1.), tex_coords:glm::vec2(1.,1.)},
+                Vertex{position: glm::vec3(-1.,1., 0.), normal:glm::vec3(0.,0.,1.), tex_coords:glm::vec2(0.,1.)},
+            ]);
+
+        for vertex in &mut vertices {
+            vertex.position *= scale;
+        }
+        self.meshes.push(Mesh::new(
+            vertices,
+            Vec::from([0,1,3, 1,2,3]),
+            Vec::from([])
+        ));
+    }
+
+    /// Function to subdivide all meshes in the model, used in 4_4
+    pub fn subdivide_meshes(&mut self, num : u32) {
+        if num == 0 {
+            return;
+        }
+        println!("Subdividing model");
+        for i in 0..self.meshes.len() {
+            println!("Subdiving mesh {}", i);
+            self.meshes[i].subdivide(num);
+        }
+    }
+
     /// Function to load a 3D model from path using tobj
     pub fn load_model(&mut self, path : &str) {
         println!("Loading model from {}", path);
@@ -72,15 +103,25 @@ impl Model {
             let num_vertices = model.mesh.positions.len() / 3;
             let mut vertices = Vec::with_capacity(num_vertices);
 
-            for i in 0..num_vertices { 
-                vertices.push(Vertex { 
-                    position: glm::vec3(model.mesh.positions[i*3],model.mesh.positions[i*3+1],model.mesh.positions[i*3+2]), 
-                    normal: glm::vec3(model.mesh.normals[i*3],model.mesh.normals[i*3+1],model.mesh.normals[i*3+2]), 
-                    //tex_coords: glm::vec2(model.mesh.positions[i*2],model.mesh.positions[i*2+1])
-                    tex_coords: glm::vec2(model.mesh.texcoords[i*2],model.mesh.texcoords[i*2+1])
-                    //tex_coords: glm::vec2(i as f32,i as f32)
-                });
-                //println!("{:?} {:?}", vertices[i].position, vertices[i].tex_coords);
+            if model.mesh.texcoords.len() <= ((num_vertices - 1) * 2)  { // model without texture, using if statement outside loop to avoid branching
+                println!("{}", model.mesh.texcoords.len());
+                for i in 0..num_vertices { 
+                    vertices.push(Vertex { 
+                        position: glm::vec3(model.mesh.positions[i*3],model.mesh.positions[i*3+1],model.mesh.positions[i*3+2]), 
+                        normal: glm::vec3(model.mesh.normals[i*3],model.mesh.normals[i*3+1],model.mesh.normals[i*3+2]), 
+                        tex_coords: glm::vec2(i as f32,i as f32)
+                    });
+                }
+            }
+            else {
+                for i in 0..num_vertices { 
+                    vertices.push(Vertex { 
+                        position: glm::vec3(model.mesh.positions[i*3],model.mesh.positions[i*3+1],model.mesh.positions[i*3+2]), 
+                        normal: glm::vec3(model.mesh.normals[i*3],model.mesh.normals[i*3+1],model.mesh.normals[i*3+2]), 
+                        //tex_coords: glm::vec2(model.mesh.positions[i*2],model.mesh.positions[i*2+1])
+                        tex_coords: glm::vec2(model.mesh.texcoords[i*2],model.mesh.texcoords[i*2+1])
+                    });
+                }
             }
 
             let indices = model.mesh.indices.clone();

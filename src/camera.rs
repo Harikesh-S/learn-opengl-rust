@@ -149,6 +149,11 @@ impl Camera for FreeCamera {
             update_roll_speed *= self.shift_multiplier;
         }
 
+        // Debug - Print current position
+        if window.get_key(glfw::Key::P) == glfw::Action::Press && window.get_key(glfw::Key::LeftShift) == glfw::Action::Press {
+            println!("Position: {:?}, Pitch: {}, Roll: {}, Yaw: {}", self.position, self.pitch, self.roll, self.yaw);
+        }
+
         // Direction - pitch and yaw from mouse
 
         // This can be done using setMouseCallback instead as it is in learnopengl

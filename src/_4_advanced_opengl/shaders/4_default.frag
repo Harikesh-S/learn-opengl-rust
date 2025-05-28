@@ -10,6 +10,8 @@ struct Material {
     int use_texture_spec;
     int use_texture_emis;
 
+    vec4 fallback_color;
+
     float shininess;
 };
 
@@ -60,6 +62,10 @@ vec4 calculateDirectionalLight(Light light, Material material, vec3 viewPos, vec
     vec4 color_diffuse = texture(material.texture_diffuse0, TexCoord) * material.use_texture_diff;
     vec4 color_specular = texture(material.texture_specular0, TexCoord) * material.use_texture_spec;
     vec4 color_emissive = texture(material.texture_emissive0, TexCoord) * material.use_texture_emis;
+
+    // Fallback colors if no texture is provided
+    color_diffuse += material.fallback_color;
+    color_specular += material.fallback_color;
     
     // Add everything together
     vec4 ambient = vec4(light.ambient,1.0) * color_diffuse;
