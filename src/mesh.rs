@@ -256,7 +256,7 @@ impl Mesh {
         self.vbo = 0;
         self.ebo = 0;
 
-        println!("Mesh before subdivision - Vertices {} , Triangles {}", self.vertices.len(), self.indices.len()/3);
+        println!("Mesh after subdivision - Vertices {} , Triangles {}", self.vertices.len(), self.indices.len()/3);
 
         self.setup_mesh();
     }
